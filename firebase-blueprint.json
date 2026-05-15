@@ -1,0 +1,63 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "User account information and financial summary",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "balance": { "type": "number" },
+        "totalInvested": { "type": "number" },
+        "totalProfit": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email"]
+    },
+    "Investment": {
+      "title": "Investment",
+      "description": "An individual investment in agricultural produce",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "amount": { "type": "number" },
+        "produceType": { "type": "string", "enum": ["Cattle Breeding", "Beef Processing", "Dairy Production", "Leather & Hides", "Organic Manure", "Cowhide (Kpomo)"] },
+        "status": { "type": "string", "enum": ["active", "completed"] },
+        "startDate": { "type": "string", "format": "date-time" },
+        "endDate": { "type": "string", "format": "date-time" },
+        "expectedReturn": { "type": "number" },
+        "payoutAmount": { "type": "number" }
+      },
+      "required": ["userId", "amount", "produceType", "status", "startDate", "endDate"]
+    },
+    "Activity": {
+      "title": "Activity",
+      "description": "Financial transaction history",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "type": { "type": "string", "enum": ["investment", "payout", "deposit"] },
+        "amount": { "type": "number" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "description": { "type": "string" }
+      },
+      "required": ["userId", "type", "amount", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "/investments/{investmentId}": {
+      "schema": "Investment",
+      "description": "Investment records"
+    },
+    "/activities/{activityId}": {
+      "schema": "Activity",
+      "description": "User activity logs"
+    }
+  }
+}

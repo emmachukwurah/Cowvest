@@ -1,0 +1,6 @@
+{
+  "name": "Cowvest",
+  "description": "A high-yield agricultural fintech platform for investors to grow their capital through sustainable farming projects.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

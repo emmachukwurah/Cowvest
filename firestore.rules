@@ -1,0 +1,77 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Phase 3: Primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Pillar 2: Validation Blueprints
+    function isValidUser(data) {
+      return data.uid == request.auth.uid 
+        && data.email is string && data.email.size() <= 128
+        && data.displayName is string && data.displayName.size() <= 128
+        && data.balance is number && data.balance >= 0
+        && data.totalInvested is number && data.totalInvested >= 0
+        && data.totalProfit is number && data.totalProfit >= 0;
+    }
+
+    function isValidInvestment(data) {
+      return data.userId == request.auth.uid
+        && data.amount is number && data.amount >= 100000 && data.amount <= 1000000
+        && data.produceType in ['Cattle Breeding', 'Beef Processing', 'Dairy Production', 'Leather & Hides', 'Organic Manure', 'Cowhide (Kpomo)']
+        && data.status in ['active', 'completed']
+        && data.startDate is string
+        && data.endDate is string
+        && data.expectedReturn == data.amount * 0.5
+        && data.payoutAmount == data.amount * 1.5;
+    }
+
+    // 1. Users Collection
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUser(incoming()) && incoming().keys().size() == 7;
+      allow update: if isOwner(userId) && isValidUser(incoming()) && (
+        // Action: Update Balance or Stats
+        incoming().diff(existing()).affectedKeys().hasOnly(['balance', 'totalInvested', 'totalProfit'])
+      );
+    }
+
+    // 2. Investments Collection
+    match /investments/{investmentId} {
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidInvestment(incoming());
+      // No client-side updates for investments in this current model
+      allow update: if false; 
+    }
+
+    // 3. Activities Collection
+    match /activities/{activityId} {
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && incoming().userId == request.auth.uid;
+    }
+  }
+}
