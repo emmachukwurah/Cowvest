@@ -1,128 +1,254 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { AuthProvider, useAuth } from "./lib/AuthContext";
 import { Navbar } from "./components/Navbar";
 import { DashboardHero } from "./components/DashboardHero";
+import { UserSimulationVideo } from "./components/UserSimulationVideo";
+import { OriginStoryVideo } from "./components/OriginStoryVideo";
 import { MarketInsights } from "./components/MarketInsights";
 import { InvestSection } from "./components/InvestSection";
-import { InvestmentList } from "./components/InvestmentList";
-import { Sprout, ShieldCheck, ArrowRight, TrendingUp } from "lucide-react";
-import { motion } from "motion/react";
+import { PortfolioPage } from "./components/PortfolioPage";
+import { SplashAndAuth } from "./components/SplashAndAuth";
+import { KycPromptModal } from "./components/KycPromptModal";
+import { CowIcon as Cow } from "./components/CowIcon";
+import { FooterModal, FooterTab } from "./components/FooterModal";
+import { AppFooter } from "./components/AppFooter";
+import { ReferAndEarnBanner } from "./components/ReferAndEarnBanner";
+import { ReferralPackageModal } from "./components/ReferralPackageModal";
+import { InviteFriendsModal } from "./components/InviteFriendsModal";
+import { MyReferralsModal } from "./components/MyReferralsModal";
+import { ReferralTermsModal } from "./components/ReferralTermsModal";
+import { AdminReferralPanel } from "./components/AdminReferralPanel";
+import { LiveChatWidget } from "./components/LiveChatWidget";
+import { motion, AnimatePresence } from "motion/react";
+import { ShieldAlert, ArrowRight, Sparkles, CheckCircle2, Gift, X } from "lucide-react";
 
 function AppContent() {
-  const { user, profile, loading, signIn } = useAuth();
+  const { user, profile, loading } = useAuth();
+  const [showSplashAndAuth, setShowSplashAndAuth] = useState(true);
+  const [currentPage, setCurrentPage] = useState<"dashboard" | "portfolio">("dashboard");
+  const [footerModalOpen, setFooterModalOpen] = useState(false);
+  const [footerModalTab, setFooterModalTab] = useState<FooterTab>("faq");
+  const [isKycModalOpen, setIsKycModalOpen] = useState(false);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
+
+  // Referral Modal States
+  const [isReferralPackageOpen, setIsReferralPackageOpen] = useState(false);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [isMyReferralsModalOpen, setIsMyReferralsModalOpen] = useState(false);
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
+  const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
+
+  // Check if current user was invited by someone
+  const [invitedByCode, setInvitedByCode] = useState<string | null>(null);
+  const [invitedBannerDismissed, setInvitedBannerDismissed] = useState(false);
+
+  useEffect(() => {
+    const code = localStorage.getItem("cowvest_referred_by");
+    if (code) {
+      setInvitedByCode(code);
+    }
+  }, []);
+
+  const openFooterModal = (tab: FooterTab) => {
+    setFooterModalTab(tab);
+    setFooterModalOpen(true);
+  };
+
+  // Handle splash & auth flow based on user session state
+  useEffect(() => {
+    if (!loading) {
+      if (user) {
+        setShowSplashAndAuth(false);
+        // Prompt KYC modal on load if unverified
+        if (profile && !profile.kycVerified) {
+          const timer = setTimeout(() => {
+            setIsKycModalOpen(true);
+          }, 1200);
+          return () => clearTimeout(timer);
+        }
+      } else {
+        setShowSplashAndAuth(true);
+      }
+    }
+  }, [user, profile, loading]);
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-white">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 bg-emerald-600 rounded-2xl flex items-center justify-center text-white animate-bounce shadow-2xl shadow-emerald-200">
-            <Sprout size={32} />
+          <div className="w-16 h-16 bg-emerald-600 rounded-3xl flex items-center justify-center text-white animate-bounce shadow-2xl shadow-emerald-500/20">
+            <Cow size={32} />
           </div>
-          <p className="font-bold text-zinc-400 animate-pulse uppercase tracking-[0.2em] text-xs">Securing Connection...</p>
+          <p className="font-bold text-zinc-500 animate-pulse uppercase tracking-[0.2em] text-xs">Securing Connection...</p>
         </div>
       </div>
     );
   }
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-white">
-        <Navbar />
-        <div className="max-w-7xl mx-auto px-4 pt-32 pb-20">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -40 }}
-              animate={{ opacity: 1, x: 0 }}
-            >
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-full text-xs font-bold uppercase tracking-widest mb-6">
-                <ShieldCheck size={16} /> Secure Agricultural Yields
-              </div>
-              <h1 className="text-6xl md:text-8xl font-black text-zinc-900 leading-[0.9] tracking-tighter mb-8">
-                Empowering <br />
-                <span className="text-emerald-600">Growth</span> through <br />
-                Innovation.
-              </h1>
-              <p className="text-xl text-zinc-500 max-w-lg mb-10 leading-relaxed">
-                Invest in Nigeria's agricultural future. Secure 50% profit in just 6 months through our managed agricultural produce pool.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <button 
-                  onClick={signIn}
-                  className="px-10 py-5 bg-emerald-600 text-white rounded-[2rem] font-bold text-xl hover:bg-emerald-700 shadow-2xl shadow-emerald-200 flex items-center justify-center gap-3 active:scale-95 transition-all"
-                >
-                  Start Investing <ArrowRight size={24} />
-                </button>
-                <div className="flex items-center gap-4 px-8 py-5 text-zinc-400 font-bold">
-                  <div className="flex -space-x-4">
-                    {[1,2,3].map(i => (
-                      <div key={i} className="w-10 h-10 border-4 border-white bg-zinc-100 rounded-full" />
-                    ))}
-                  </div>
-                  Join 100k+ Investors
-                </div>
-              </div>
-            </motion.div>
-            
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="relative hidden lg:block"
-            >
-              <div className="absolute inset-0 bg-emerald-100 rounded-[3rem] blur-3xl opacity-30 -z-10 animate-pulse" />
-              <img 
-                src="https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?auto=format&fit=crop&q=80&w=1200" 
-                alt="Agricultural fields"
-                className="rounded-[3rem] shadow-2xl shadow-zinc-200 border-8 border-white aspect-[4/5] object-cover"
-              />
-              <div className="absolute -bottom-10 -left-10 bg-white p-8 rounded-[2rem] shadow-2xl border border-zinc-100 max-w-xs animate-bounce" style={{ animationDuration: "5s" }}>
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600">
-                    <TrendingUp size={24} />
-                  </div>
-                  <div>
-                    <p className="text-xs text-zinc-400 font-bold uppercase tracking-widest">Fixed Returns</p>
-                    <p className="text-2xl font-black text-emerald-900">+50.0% / 6m</p>
-                  </div>
-                </div>
-                <p className="text-zinc-500 text-sm leading-relaxed">
-                  Join a community of investors funding sustainable maize and cocoa plantations across the country.
-                </p>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </div>
-    );
+  if (showSplashAndAuth) {
+    return <SplashAndAuth onComplete={() => setShowSplashAndAuth(false)} />;
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 font-sans selection:bg-emerald-100 selection:text-emerald-900">
-      <Navbar />
+    <div className="min-h-screen bg-zinc-50 font-sans selection:bg-emerald-100 selection:text-emerald-900 pt-16">
+      <Navbar 
+        currentPage={currentPage}
+        onNavigate={(page) => {
+          setIsAdminPanelOpen(false);
+          setCurrentPage(page);
+        }}
+        onOpenKyc={() => setIsKycModalOpen(true)}
+        onOpenInvite={() => setIsReferralPackageOpen(true)}
+        onOpenAdminReferral={() => setIsAdminPanelOpen(!isAdminPanelOpen)}
+      />
+
+      {/* Invited By Friend Welcome Banner */}
+      {invitedByCode && !invitedBannerDismissed && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-r from-emerald-900 via-teal-950 to-zinc-950 text-white py-2.5 px-4 border-b border-emerald-500/30 relative z-40"
+        >
+          <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 text-xs">
+            <div className="flex items-center gap-2">
+              <span className="p-1 bg-emerald-500/20 border border-emerald-500/40 rounded-lg text-emerald-300">
+                <Gift size={16} />
+              </span>
+              <span>
+                <strong>You were invited by a friend!</strong> Complete KYC and make your first investment to earn a welcome referral bonus (up to ₦2,500).
+              </span>
+            </div>
+            <button 
+              onClick={() => setInvitedBannerDismissed(true)}
+              className="text-zinc-400 hover:text-white p-1"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Persistent KYC Alert Prompt Banner */}
+      {profile && !profile.kycVerified && !bannerDismissed && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-r from-zinc-900 via-emerald-950 to-zinc-950 text-white py-3 px-4 border-b border-emerald-500/30 shadow-md relative z-40"
+        >
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+            <div className="flex items-center gap-2.5">
+              <span className="w-8 h-8 bg-emerald-500/20 text-emerald-400 rounded-xl flex items-center justify-center shrink-0 border border-emerald-500/30">
+                <ShieldAlert size={18} />
+              </span>
+              <div>
+                <span className="font-black text-xs md:text-sm tracking-wide text-emerald-300 uppercase mr-2">Action Required:</span>
+                <span className="font-bold text-xs md:text-sm text-zinc-100">
+                  Submit your KYC to Start your investment journey
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 shrink-0">
+              <button
+                onClick={() => setIsKycModalOpen(true)}
+                className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-xl shadow-lg shadow-emerald-600/30 transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <span>Submit KYC Now</span>
+                <ArrowRight size={14} />
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       <main className="max-w-7xl mx-auto px-4 pb-32">
-        <DashboardHero />
-        <MarketInsights />
-        <InvestmentList />
-        <InvestSection />
+        {isAdminPanelOpen ? (
+          <div className="pt-4">
+            <button
+              onClick={() => setIsAdminPanelOpen(false)}
+              className="mb-4 px-4 py-2 bg-zinc-200 hover:bg-zinc-300 text-zinc-800 font-extrabold text-xs rounded-xl transition-colors cursor-pointer"
+            >
+              ← Return to User Dashboard
+            </button>
+            <AdminReferralPanel />
+          </div>
+        ) : currentPage === "portfolio" ? (
+          <PortfolioPage 
+            onBack={() => setCurrentPage("dashboard")}
+            onInvestMore={() => {
+              setCurrentPage("dashboard");
+              setTimeout(() => {
+                const el = document.getElementById("invest-section");
+                el?.scrollIntoView({ behavior: "smooth" });
+              }, 100);
+            }}
+          />
+        ) : (
+          <>
+            <DashboardHero onOpenPortfolio={() => setCurrentPage("portfolio")} />
+            <UserSimulationVideo />
+            <OriginStoryVideo />
+            <MarketInsights />
+            <InvestSection 
+              onOpenReferralPackage={() => setIsReferralPackageOpen(true)}
+              onOpenInvite={() => setIsInviteModalOpen(true)}
+              onOpenMyReferrals={() => setIsMyReferralsModalOpen(true)}
+              onOpenTerms={() => setIsTermsModalOpen(true)}
+            />
+          </>
+        )}
       </main>
       
-      <footer className="py-20 bg-white border-t border-zinc-100">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="flex items-center gap-2 grayscale brightness-0 opacity-40">
-            <div className="w-8 h-8 bg-zinc-900 rounded-lg flex items-center justify-center text-white">
-              <Sprout size={16} />
-            </div>
-            <span className="text-lg font-bold">Cowvest</span>
-          </div>
-          <p className="text-zinc-400 text-sm font-medium">
-            © 2026 Cowvest Agricultural Finance. All rights reserved. Securely powered by Gemini AI.
-          </p>
-          <div className="flex gap-8 text-sm font-bold text-zinc-400 uppercase tracking-widest">
-            <a href="#" className="hover:text-emerald-600 transition-colors">Privacy</a>
-            <a href="#" className="hover:text-emerald-600 transition-colors">Terms</a>
-            <a href="#" className="hover:text-emerald-600 transition-colors">Support</a>
-          </div>
-        </div>
-      </footer>
+      {/* 9 Interactive App Infrastructure Thumbnails Footer */}
+      <AppFooter
+        currentPage={currentPage}
+        onNavigate={(page) => setCurrentPage(page)}
+        onOpenReferralPackage={() => setIsReferralPackageOpen(true)}
+        onOpenFooterModal={(tab) => openFooterModal(tab)}
+        onOpenReferralTerms={() => setIsTermsModalOpen(true)}
+        onOpenKyc={() => setIsKycModalOpen(true)}
+      />
+
+      <FooterModal
+        isOpen={footerModalOpen}
+        onClose={() => setFooterModalOpen(false)}
+        initialTab={footerModalTab}
+        onOpenKyc={() => setIsKycModalOpen(true)}
+      />
+
+      <KycPromptModal
+        isOpen={isKycModalOpen}
+        onClose={() => setIsKycModalOpen(false)}
+      />
+
+      <ReferralPackageModal
+        isOpen={isReferralPackageOpen}
+        onClose={() => setIsReferralPackageOpen(false)}
+        onOpenMyReferrals={() => setIsMyReferralsModalOpen(true)}
+        onOpenTerms={() => setIsTermsModalOpen(true)}
+      />
+
+      <InviteFriendsModal
+        isOpen={isInviteModalOpen}
+        onClose={() => setIsInviteModalOpen(false)}
+      />
+
+      <MyReferralsModal
+        isOpen={isMyReferralsModalOpen}
+        onClose={() => setIsMyReferralsModalOpen(false)}
+        onOpenInvite={() => setIsInviteModalOpen(true)}
+      />
+
+      <ReferralTermsModal
+        isOpen={isTermsModalOpen}
+        onClose={() => setIsTermsModalOpen(false)}
+      />
+
+      {/* Floating 24/7 AI Live Chat widget */}
+      <LiveChatWidget
+        onOpenKyc={() => setIsKycModalOpen(true)}
+        onOpenInvite={() => setIsInviteModalOpen(true)}
+      />
     </div>
   );
 }

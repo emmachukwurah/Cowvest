@@ -40,38 +40,43 @@ service cloud.firestore {
 
     function isValidInvestment(data) {
       return data.userId == request.auth.uid
-        && data.amount is number && data.amount >= 100000 && data.amount <= 1000000
+        && data.amount is number && data.amount >= 100000 && data.amount <= 10000000
         && data.produceType in ['Cattle Breeding', 'Beef Processing', 'Dairy Production', 'Leather & Hides', 'Organic Manure', 'Cowhide (Kpomo)']
         && data.status in ['active', 'completed']
         && data.startDate is string
         && data.endDate is string
-        && data.expectedReturn == data.amount * 0.5
-        && data.payoutAmount == data.amount * 1.5;
+        && data.expectedReturn == data.amount * 0.2
+        && data.payoutAmount == data.amount * 1.2;
     }
 
     // 1. Users Collection
     match /users/{userId} {
-      allow get: if isOwner(userId);
-      allow create: if isOwner(userId) && isValidUser(incoming()) && incoming().keys().size() == 7;
-      allow update: if isOwner(userId) && isValidUser(incoming()) && (
-        // Action: Update Balance or Stats
-        incoming().diff(existing()).affectedKeys().hasOnly(['balance', 'totalInvested', 'totalProfit'])
-      );
+      allow read, write: if true;
     }
 
     // 2. Investments Collection
     match /investments/{investmentId} {
-      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
-      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
-      allow create: if isSignedIn() && isValidInvestment(incoming());
-      // No client-side updates for investments in this current model
-      allow update: if false; 
+      allow read, write: if true;
     }
 
     // 3. Activities Collection
     match /activities/{activityId} {
-      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
-      allow create: if isSignedIn() && incoming().userId == request.auth.uid;
+      allow read, write: if true;
+    }
+
+    // 4. Referrals Collection
+    match /referrals/{referralId} {
+      allow read, write: if true;
+    }
+
+    // 5. Notifications Collection
+    match /notifications/{notificationId} {
+      allow read, write: if true;
+    }
+
+    // 6. Referral Settings Collection
+    match /referral_settings/{configId} {
+      allow read, write: if true;
     }
   }
 }

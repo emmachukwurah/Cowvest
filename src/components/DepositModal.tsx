@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Wallet, X, ArrowRight, ShieldCheck, CheckCircle2, PartyPopper } from "lucide-react";
 import { useAuth } from "../lib/AuthContext";
-import { db } from "../lib/firebase";
+import { db, handleFirestoreError, OperationType } from "../lib/firebase";
 import { doc, updateDoc, increment, addDoc, collection } from "firebase/firestore";
 import { formatCurrency } from "../lib/utils";
 
@@ -33,18 +33,26 @@ export function DepositModal({ isOpen, onClose }: DepositModalProps) {
       const userRef = doc(db, "users", profile.uid);
       
       // Update balance
-      await updateDoc(userRef, {
-        balance: increment(numAmount)
-      });
+      try {
+        await updateDoc(userRef, {
+          balance: increment(numAmount)
+        });
+      } catch (err) {
+        handleFirestoreError(err, OperationType.UPDATE, `users/${profile.uid}`);
+      }
 
       // Log activity
-      await addDoc(collection(db, "activities"), {
-        userId: profile.uid,
-        type: "deposit",
-        amount: numAmount,
-        timestamp: new Date().toISOString(),
-        description: `Deposited ${formatCurrency(numAmount)} into wallet.`
-      });
+      try {
+        await addDoc(collection(db, "activities"), {
+          userId: profile.uid,
+          type: "deposit",
+          amount: numAmount,
+          timestamp: new Date().toISOString(),
+          description: `Deposited ${formatCurrency(numAmount)} into wallet.`
+        });
+      } catch (err) {
+        handleFirestoreError(err, OperationType.CREATE, "activities");
+      }
 
       setIsSuccess(true);
       setAmount("");
@@ -62,11 +70,11 @@ export function DepositModal({ isOpen, onClose }: DepositModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-zinc-900/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-4 bg-zinc-900/60 backdrop-blur-sm overflow-y-auto">
       <motion.div 
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="bg-white rounded-[2rem] w-full max-w-md overflow-hidden shadow-2xl"
+        className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl my-auto max-h-[92vh] flex flex-col"
       >
         <AnimatePresence mode="wait">
           {!isSuccess ? (
@@ -75,7 +83,7 @@ export function DepositModal({ isOpen, onClose }: DepositModalProps) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="p-8"
+              className="p-5 sm:p-8 overflow-y-auto"
             >
               <div className="flex justify-between items-start mb-6">
                 <div>
@@ -144,6 +152,28 @@ export function DepositModal({ isOpen, onClose }: DepositModalProps) {
                   className="w-24 h-24 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-6 relative"
                 >
                   <CheckCircle2 size={48} />
+                  
+                  {/* Confetti Particles */}
+                  {[...Array(12)].map((_, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ scale: 0, x: 0, y: 0 }}
+                      animate={{ 
+                        scale: [0, 1, 0],
+                        x: Math.cos(i * 30 * Math.PI / 180) * 80,
+                        y: Math.sin(i * 30 * Math.PI / 180) * 80,
+                      }}
+                      transition={{ 
+                        duration: 1, 
+                        delay: 0.1,
+                        ease: "easeOut"
+                      }}
+                      className={`absolute w-2 h-2 rounded-full ${
+                        i % 3 === 0 ? "bg-emerald-400" : i % 3 === 1 ? "bg-amber-400" : "bg-blue-400"
+                      }`}
+                    />
+                  ))}
+
                   <motion.div 
                     animate={{ scale: [1, 1.2, 1], rotate: [0, 15, -15, 0] }}
                     transition={{ repeat: Infinity, duration: 2 }}

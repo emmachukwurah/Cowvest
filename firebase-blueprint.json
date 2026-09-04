@@ -11,7 +11,29 @@
         "balance": { "type": "number" },
         "totalInvested": { "type": "number" },
         "totalProfit": { "type": "number" },
-        "createdAt": { "type": "string", "format": "date-time" }
+        "createdAt": { "type": "string", "format": "date-time" },
+        "avatarUrl": { "type": "string" },
+        "bvn": { "type": "string" },
+        "twoFactorEnabled": { "type": "boolean" },
+        "kycVerified": { "type": "boolean" },
+        "kycDetails": {
+          "type": "object",
+          "properties": {
+            "fullName": { "type": "string" },
+            "idType": { "type": "string" },
+            "idNumber": { "type": "string" },
+            "address": { "type": "string" }
+          }
+        },
+        "fingerprintEnabled": { "type": "boolean" },
+        "bankAccount": {
+          "type": "object",
+          "properties": {
+            "bankName": { "type": "string" },
+            "accountNumber": { "type": "string" },
+            "accountName": { "type": "string" }
+          }
+        }
       },
       "required": ["uid", "email"]
     },
@@ -44,6 +66,64 @@
         "description": { "type": "string" }
       },
       "required": ["userId", "type", "amount", "timestamp"]
+    },
+    "Referral": {
+      "title": "Referral Record",
+      "description": "Record tracking referral relationship, KYC status, investment status, and reward state",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "referrerUid": { "type": "string" },
+        "referrerCode": { "type": "string" },
+        "referredUid": { "type": "string" },
+        "referredName": { "type": "string" },
+        "referredEmail": { "type": "string" },
+        "registeredAt": { "type": "string", "format": "date-time" },
+        "kycStatus": { "type": "string", "enum": ["Pending", "KYC Completed"] },
+        "kycCompletedAt": { "type": "string", "format": "date-time" },
+        "investmentStatus": { "type": "string", "enum": ["No Investment", "Invested"] },
+        "firstInvestmentAmount": { "type": "number" },
+        "firstInvestmentDate": { "type": "string", "format": "date-time" },
+        "rewardAmount": { "type": "number" },
+        "newInvestorBonus": { "type": "number" },
+        "tierRate": { "type": "number" },
+        "rewardStatus": { "type": "string", "enum": ["Pending", "Approved", "Paid", "Rejected"] },
+        "fraudFlag": { "type": "boolean" },
+        "fraudReason": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["referrerUid", "referredUid", "rewardStatus"]
+    },
+    "ReferralNotification": {
+      "title": "Referral Notification",
+      "description": "User in-app notifications for referral lifecycle events",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "type": { "type": "string" },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "title", "message"]
+    },
+    "ReferralSettings": {
+      "title": "Referral Settings",
+      "description": "Admin configuration for referral reward rates and caps",
+      "type": "object",
+      "properties": {
+        "bronzeRate": { "type": "number" },
+        "silverRate": { "type": "number" },
+        "goldRate": { "type": "number" },
+        "newInvestorBonusRate": { "type": "number" },
+        "maxReferrerRewardCap": { "type": "number" },
+        "maxNewInvestorBonusCap": { "type": "number" },
+        "monthlyLimitPerUser": { "type": "number" },
+        "minQualifyingInvestment": { "type": "number" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
     }
   },
   "firestore": {
@@ -58,6 +138,18 @@
     "/activities/{activityId}": {
       "schema": "Activity",
       "description": "User activity logs"
+    },
+    "/referrals/{referralId}": {
+      "schema": "Referral",
+      "description": "Referral relationships and reward status"
+    },
+    "/notifications/{notificationId}": {
+      "schema": "ReferralNotification",
+      "description": "In-app user notifications"
+    },
+    "/referral_settings/{configId}": {
+      "schema": "ReferralSettings",
+      "description": "Global referral configuration settings"
     }
   }
 }

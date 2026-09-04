@@ -29,30 +29,30 @@ export function MarketInsights() {
     fetchAnalysis(selectedProduce);
   }, [selectedProduce]);
 
-  const produceTypes: ProduceType[] = ["Cattle Breeding", "Beef Processing", "Dairy Production", "Leather & Hides", "Organic Manure", "Cowhide (Kpomo)"];
+  const produceTypes: ProduceType[] = ["Cattle Breeding", "Beef Processing", "Dairy Production", "Leather & Hides", "Organic Manure", "Cowhide (Kpomo)", "Sesame Seed"];
 
   return (
-    <div className="bg-zinc-900 rounded-[2rem] p-8 text-white mb-12 overflow-hidden relative">
-      <div className="absolute top-0 right-0 p-8 opacity-10">
+    <div className="bg-zinc-900 rounded-[2rem] p-5 sm:p-8 text-white mb-8 sm:mb-12 overflow-hidden relative border border-zinc-800">
+      <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
         <Sparkles size={120} />
       </div>
 
       <div className="relative z-10">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
           <div>
-            <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm uppercase tracking-widest mb-2">
+            <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs sm:text-sm uppercase tracking-widest mb-2">
               <Sparkles size={16} />
               AI Market Intelligence
             </div>
-            <h2 className="text-3xl font-bold">Predictive Insights</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold">Predictive Insights</h2>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 pt-1 no-scrollbar -mx-2 px-2">
             {produceTypes.map((type) => (
               <button
                 key={type}
                 onClick={() => setSelectedProduce(type)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                className={`px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
                   selectedProduce === type 
                     ? "bg-white text-zinc-900 shadow-lg" 
                     : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white"
